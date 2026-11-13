@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Colab</string>
+    <string name="fleet_title">Runtime Fleet</string>
+    <string name="search_placeholder">Search name, GPU, tunnel, protocol…</string>
+    <string name="terminal_action">Terminal</string>
+    <string name="files_action">Files</string>
+    <string name="deploy_new_vm">Deploy New VM</string>
+</resources>

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Colab",
+  "description": "Material Design 3 Expressive AMOLED manager for Google Colab VMs, Alpine Linux CLI instances, resilient tmux SSH consoles, and remote files.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
