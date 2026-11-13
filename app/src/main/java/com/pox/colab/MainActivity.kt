@@ -4,9 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -58,6 +60,10 @@ class MainActivity : ComponentActivity() {
             var selectedVmTab by remember { mutableIntStateOf(0) }
             var showNewVmDialog by remember { mutableStateOf(false) }
 
+            BackHandler(enabled = currentDestination != "home") {
+                currentDestination = "home"
+            }
+
             ColabM3ExpressiveTheme(
                 palette = palette,
                 displayMode = displayMode
@@ -92,82 +98,87 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    when (currentDestination) {
-                        "home" -> HomeScreen(
-                            vms = vms,
-                            searchQuery = searchQuery,
-                            onSearchChange = viewModel::updateSearchQuery,
-                            onOpenNewVmDialog = { showNewVmDialog = true },
-                            onOpenVmDetails = { vmId, tab ->
-                                selectedVmId = vmId
-                                selectedVmTab = tab
-                                currentDestination = "details"
-                            },
-                            modifier = Modifier.padding(innerPadding)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                    ) {
+                        when (currentDestination) {
+                            "home" -> HomeScreen(
+                                vms = vms,
+                                searchQuery = searchQuery,
+                                onSearchChange = viewModel::updateSearchQuery,
+                                onOpenNewVmDialog = { showNewVmDialog = true },
+                                onOpenVmDetails = { vmId, tab ->
+                                    selectedVmId = vmId
+                                    selectedVmTab = tab
+                                    currentDestination = "details"
+                                }
+                            )
 
-                        "details" -> {
-                            val activeVm = vms.find { it.id == selectedVmId } ?: vms.firstOrNull()
-                            if (activeVm != null) {
-                                val effectiveTerminalStyle =
-                                    perVmTerminalStyle[activeVm.id] ?: globalTerminalStyle
-                                VmDetailsScreen(
-                                    vm = activeVm,
-                                    initialTab = selectedVmTab,
-                                    terminalStyle = effectiveTerminalStyle,
-                                    remoteFiles = remoteFiles,
-                                    onBack = { currentDestination = "home" },
-                                    onTogglePower = { viewModel.toggleVmPower(activeVm.id) },
-                                    onAddTerminalTab = { viewModel.addTerminalTab(activeVm.id) },
-                                    onCloseTerminalTab = { tabId ->
-                                        viewModel.closeTerminalTab(activeVm.id, tabId)
-                                    },
-                                    onSelectTerminalTab = { tabId ->
-                                        viewModel.selectTerminalTab(activeVm.id, tabId)
-                                    },
-                                    onExecuteCommand = { cmd ->
-                                        viewModel.executeTerminalCommand(activeVm.id, cmd)
-                                    },
-                                    onCreateFolder = viewModel::createRemoteFolder,
-                                    onRenameFile = viewModel::renameRemoteNode,
-                                    onUploadFile = viewModel::uploadRemoteFile,
-                                    onDeleteFile = viewModel::deleteRemoteNode
-                                )
+                            "details" -> {
+                                val activeVm = vms.find { it.id == selectedVmId } ?: vms.firstOrNull()
+                                if (activeVm != null) {
+                                    val effectiveTerminalStyle =
+                                        perVmTerminalStyle[activeVm.id] ?: globalTerminalStyle
+                                    VmDetailsScreen(
+                                        vm = activeVm,
+                                        initialTab = selectedVmTab,
+                                        terminalStyle = effectiveTerminalStyle,
+                                        remoteFiles = remoteFiles,
+                                        onBack = { currentDestination = "home" },
+                                        onTogglePower = { viewModel.toggleVmPower(activeVm.id) },
+                                        onAddTerminalTab = { viewModel.addTerminalTab(activeVm.id) },
+                                        onCloseTerminalTab = { tabId ->
+                                            viewModel.closeTerminalTab(activeVm.id, tabId)
+                                        },
+                                        onSelectTerminalTab = { tabId ->
+                                            viewModel.selectTerminalTab(activeVm.id, tabId)
+                                        },
+                                        onExecuteCommand = { cmd ->
+                                            viewModel.executeTerminalCommand(activeVm.id, cmd)
+                                        },
+                                        onCreateFolder = viewModel::createRemoteFolder,
+                                        onRenameFile = viewModel::renameRemoteNode,
+                                        onUploadFile = viewModel::uploadRemoteFile,
+                                        onDeleteFile = viewModel::deleteRemoteNode
+                                    )
+                                }
                             }
+
+                            "settings" -> SettingsScreen(
+                                alpineState = alpineState,
+                                accounts = accounts,
+                                activeAccountId = activeAccountId,
+                                vms = vms,
+                                palette = palette,
+                                displayMode = displayMode,
+                                globalTerminalStyle = globalTerminalStyle,
+                                perVmTerminalStyle = perVmTerminalStyle,
+                                releases = releases,
+                                onTriggerAlpineUpdate = viewModel::triggerAlpineUpdate,
+                                onSelectActiveAccount = viewModel::selectActiveAccount,
+                                onToggleAccountEnabled = viewModel::toggleAccountEnabled,
+                                onSetAccountTier = viewModel::setAccountTier,
+                                onAddAccountPkce = { label, email, tier ->
+                                    viewModel.addAccountWithPkce(label, email, tier) { oauthUrl ->
+                                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(oauthUrl)))
+                                    }
+                                },
+                                onSelectPalette = viewModel::setPalette,
+                                onSelectDisplayMode = viewModel::setDisplayMode,
+                                onSelectTerminalStyle = viewModel::setGlobalTerminalStyle,
+                                onSelectVmTerminalStyle = viewModel::setVmTerminalStyle,
+                                onRefreshReleases = viewModel::refreshGithubReleases
+                            )
                         }
 
-                        "settings" -> SettingsScreen(
-                            alpineState = alpineState,
-                            accounts = accounts,
-                            activeAccountId = activeAccountId,
-                            vms = vms,
-                            palette = palette,
-                            displayMode = displayMode,
-                            globalTerminalStyle = globalTerminalStyle,
-                            perVmTerminalStyle = perVmTerminalStyle,
-                            releases = releases,
-                            onTriggerAlpineUpdate = viewModel::triggerAlpineUpdate,
-                            onSelectActiveAccount = viewModel::selectActiveAccount,
-                            onToggleAccountEnabled = viewModel::toggleAccountEnabled,
-                            onSetAccountTier = viewModel::setAccountTier,
-                            onAddAccountPkce = { label, email, tier ->
-                                viewModel.addAccountWithPkce(label, email, tier) { oauthUrl ->
-                                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(oauthUrl)))
-                                }
-                            },
-                            onSelectPalette = viewModel::setPalette,
-                            onSelectDisplayMode = viewModel::setDisplayMode,
-                            onSelectTerminalStyle = viewModel::setGlobalTerminalStyle,
-                            onSelectVmTerminalStyle = viewModel::setVmTerminalStyle,
-                            onRefreshReleases = viewModel::refreshGithubReleases
-                        )
-                    }
-
-                    if (showNewVmDialog) {
-                        NewVmDialog(
-                            onDismiss = { showNewVmDialog = false },
-                            onDeploy = viewModel::deployVm
-                        )
+                        if (showNewVmDialog) {
+                            NewVmDialog(
+                                onDismiss = { showNewVmDialog = false },
+                                onDeploy = viewModel::deployVm
+                            )
+                        }
                     }
                 }
             }

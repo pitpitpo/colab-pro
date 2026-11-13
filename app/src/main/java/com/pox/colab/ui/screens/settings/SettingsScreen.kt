@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,7 +47,7 @@ import com.pox.colab.domain.model.GithubReleaseInfo
 import com.pox.colab.domain.model.TerminalBackgroundStyle
 import com.pox.colab.domain.model.VmInstance
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     alpineState: AlpineContainerState,
@@ -67,13 +68,14 @@ fun SettingsScreen(
     onSelectDisplayMode: (DisplayMode) -> Unit,
     onSelectTerminalStyle: (TerminalBackgroundStyle) -> Unit,
     onSelectVmTerminalStyle: (vmId: String, style: TerminalBackgroundStyle?) -> Unit,
-    onRefreshReleases: () -> Unit
+    onRefreshReleases: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var selectedHub by remember { mutableIntStateOf(0) }
     val hubs = listOf("Accounts Hub", "Theme Hub", "Updates")
     val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize()) {
         PrimaryTabRow(selectedTabIndex = selectedHub) {
             hubs.forEachIndexed { index, title ->
                 Tab(
